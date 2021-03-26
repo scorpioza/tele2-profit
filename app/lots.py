@@ -18,6 +18,7 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
     cfg_index = 0
     while data_left >= min_amount:
 
+        smiles = []
         # xekima: add auto mode
         if AUTO_MODE:
             cfg = CFG_GB if lot_type == 'data' else CFG_MIN
@@ -28,6 +29,9 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
             lot_data.append(int(cfg[cfg_index]["lot"]))
             if "price" in cfg[cfg_index]:
                 lot_data.append(int(cfg[cfg_index]["price"]))
+                
+            if "smiles" in cfg[cfg_index]:
+                smiles = cfg[cfg_index]["smiles"]
 
             cfg_index+=1
 
@@ -85,6 +89,7 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
             'lot_type': lot_type,
             'amount': amount,
             'price': price,
+            'smiles': smiles
         })
 
         index += 1
@@ -122,8 +127,11 @@ def print_prepared_lots(prepared_lots):
               f'Ok. You have prepared {count} lot{"s" if count > 1 else ""}:')
         for lot in prepared_lots:
             color = Fore.YELLOW if lot['lot_type'] == 'voice' else Fore.GREEN
+
+            smiles = "(" + ", ".join(lot["smiles"]) + ")" if "smiles" in lot else ""
+
             xprint(color, f'\t{lot["amount"]} {lot["name"]} '
-                          f'for {lot["price"]} rub')
+                          f'for {lot["price"]} rub '+smiles)
 
 
 def prepare_old_lots(old_lots: list):
@@ -161,6 +169,11 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
         status_is_ok = get_if_status_is_ok(response)
         print_lot_listing_status(response)
         if status_is_ok:
+            '''
+            {'meta': {'status': 'OK', 'message': None}, 'data': {'id': '-5519094492788093579', 'seller': {'name': '', 'emojis': []}, 'trafficType': 'voice', 'volume': {'value': 50, 'uom': 'min'}, 'cost': {'amount': 40.0, 'currency': 'rub'}, 'commission': {'amount': 0.0, 'currency': 'rub'}, 'status': 'active', 'creationDate': '2021-03-26T22:47:23.226+03:00', 'expirationDate': '2021-04-22T00:00:00+03:00', 'statusChangeDate': '2021-03-26T22:47:23.226+03:00', 'my': True, 'hash': '6078503369446081043'}}
+            '''
+            smiles = await api.apply_emojes(response['data']['id'], lot['price'], lot['smiles'])
+            xprint(Fore.YELLOW, "Smiles added: "+"(" + ", ".join(smiles) + ")")
             break
         else:
             time.sleep(3)

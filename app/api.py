@@ -3,6 +3,10 @@ from aiohttp import ClientSession, ContentTypeError, ClientResponse
 from app.constants import SECURITY_BYPASS_HEADERS, MAIN_API, SMS_VALIDATION_API, \
     TOKEN_API
 
+from random import randrange
+
+from config import *
+
 
 async def _try_parse_to_json(response: ClientResponse):
     try:
@@ -86,6 +90,20 @@ class Tele2Api:
         })
 
         return await _try_parse_to_json(response)
+
+
+    async def apply_emojes(self, lot_id, lot_price, smiles=[]):
+        if not smiles or not len(smiles):
+            smile1 = randrange(0, 8, 1)
+            smile2 = randrange(0, 8, 1)
+            smile3 = randrange(0, 8, 1)
+            smiles = [SMILES[smile1], SMILES[smile2], SMILES[smile3]]
+        await self.session.patch(f'{self.market_api}/{lot_id}', json={
+            "cost": {"amount": lot_price, "currency": "rub"},
+            'showSellerName': True,
+            "emojis": smiles
+        })
+        return smiles
 
     async def return_lot(self, lot_id):
         response = await self.session.delete(f'{self.market_api}/{lot_id}')

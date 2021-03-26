@@ -10,7 +10,7 @@ from log import xprint
 
 
 async def display_menu(display_again_action: bool):
-    choices = [('Prepare new lots to sell', 'new'), 'Exit']
+    choices = [('Prepare new lots to sell', 'new'), ('Set random smiles to existing lots', 'randomsmiles'), 'Exit']
     if display_again_action:
         choices.insert(0, ('Try selling returned lots again', 'again'))
     return console.list_input('Action', choices=choices)
@@ -24,13 +24,13 @@ async def menu_new_action(api):
         print_prepared_lots(prepared_lots)
 
         # xekima
-
         if AUTO_MODE:
             await sell_prepared_lots(api, prepared_lots)
         else:
             if console.confirm('Sell prepared lots?', default=True):
                 await sell_prepared_lots(api, prepared_lots)
-
+        
+        
     else:
         xprint(Fore.YELLOW, 'You did not prepared any lots.')
 

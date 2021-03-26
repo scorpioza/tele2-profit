@@ -5,7 +5,7 @@ from app.api import Tele2Api
 from app.auth import input_phone_number, write_config_to_file, get_tokens
 from app.utils import run_main
 from app.menu import display_menu, menu_new_action, menu_again_action
-from app.startup import delete_active_lots, try_load_config
+from app.startup import delete_active_lots, try_load_config, print_active_lots, update_active_lots
 from app.timer import activate_timer_if_needed
 
 from config import *
@@ -55,12 +55,15 @@ async def main_pipeline(phone_number: str, access_token: str,
             deleted_lots = await delete_active_lots(api)
         else:
             deleted_lots = []
+            await print_active_lots(api)
         xprint(Fore.MAGENTA, '-----')
         option = await display_menu(display_again_action=len(deleted_lots) > 0)
         if option == 'new':
             await menu_new_action(api)
         elif option == 'again':
             await menu_again_action(api, deleted_lots)
+        elif option == 'randomsmiles':
+            await update_active_lots(api)
         elif option == 'Exit':
             return
         await activate_timer_if_needed(api)
@@ -71,6 +74,7 @@ async def main_auto_mode(phone_number: str, access_token: str,
     async with Tele2Api(phone_number, access_token, refresh_token) as api:
         await print_balance(api)
         await menu_new_action(api)
+
 
 async def main():
     colorama_init(True)

@@ -18,7 +18,7 @@ def try_load_config():
         return False
 
 
-async def delete_active_lots(api: Tele2Api):
+async def get_active_lots(api: Tele2Api, func="print"):
     tasks = []
     print(Fore.WHITE + 'Checking active lots...')
     active_lots = await api.get_active_lots()
@@ -31,11 +31,28 @@ async def delete_active_lots(api: Tele2Api):
             print(color +
                   f'\t{lot["volume"]["value"]} {lot["volume"]["uom"]} '
                   f'for {int(lot["cost"]["amount"])} rub')
-        for lot in active_lots:
-            task = asyncio.ensure_future(api.return_lot(lot['id']))
-            tasks.append(task)
-        await asyncio.gather(*tasks)
-        print(Fore.GREEN + 'All active lots have been deleted!')
+        if func != "print":
+            for lot in active_lots:
+                task = ""
+                msg = ""
+                if func == "delete":
+                    task = asyncio.ensure_future(api.return_lot(lot['id']))
+                    msg = "All active lots have been deleted!"
+                elif func == "update":
+                    task = asyncio.ensure_future(api.apply_emojes(lot['id'], int(lot["cost"]["amount"])))
+                    msg = "All active lots have been modified, smiles were updated!"
+            tasks.append(task)                
+            await asyncio.gather(*tasks)
+            print(Fore.GREEN + msg)
     else:
         print(Fore.MAGENTA + 'You don\'t have any active lots.')
     return active_lots
+
+async def delete_active_lots(api: Tele2Api):
+    return get_active_lots(api, "delete")
+
+async def update_active_lots(api: Tele2Api):
+    return get_active_lots(api, "update")
+
+async def print_active_lots(api: Tele2Api):
+    return get_active_lots(api)
