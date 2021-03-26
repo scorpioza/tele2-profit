@@ -6,32 +6,58 @@ from colorama import Fore
 
 from app.api import Tele2Api
 
+from config import *
+from log import xprint
 
+
+#xekima: modified
 def input_lots(data_left, display_name, min_amount, max_multiplier,
                price_multiplier, lot_type):
     lots_to_sell = []
     index = 1
+    cfg_index = 0
     while data_left >= min_amount:
-        user_input = input(Fore.WHITE + f'\t{display_name}s lot {index} >>> ')
 
-        if user_input == '':
-            break
+        # xekima: add auto mode
+        if AUTO_MODE:
+            cfg = CFG_GB if lot_type == 'data' else CFG_MIN
+            if len(cfg) <= cfg_index:
+                break
 
-        if not re.match(r'^\s*\d+\s*(\s\d+\s*)?$', user_input):
-            print(Fore.MAGENTA + '\tIncorrect input format. Try again')
-            continue
+            lot_data=list()
+            lot_data.append(int(cfg[cfg_index]["lot"]))
+            if "price" in cfg[cfg_index]:
+                lot_data.append(int(cfg[cfg_index]["price"]))
 
-        clean = re.sub(r'\s+', ' ', user_input.strip())
-        lot_data = list(map(int, clean.split(' ')))
+            cfg_index+=1
+
+            lot_str = " ".join(str(x) for x in lot_data)
+            if not re.match(r'^\s*\d+\s*(\s\d+\s*)?$', lot_str):
+                xprint(Fore.MAGENTA, '\tIncorrect input format: '+lot_str+'. Skipping...')
+                continue
+
+        else:
+
+            user_input = input(Fore.WHITE + f'\t{display_name}s lot {index} >>> ')
+
+            if user_input == '':
+                break
+
+            if not re.match(r'^\s*\d+\s*(\s\d+\s*)?$', user_input):
+                xprint(Fore.MAGENTA, '\tIncorrect input format. Try again')
+                continue
+
+            clean = re.sub(r'\s+', ' ', user_input.strip())
+            lot_data = list(map(int, clean.split(' ')))
 
         amount = lot_data[0]
         if amount < min_amount:
-            print(Fore.RED +
+            xprint(Fore.RED,
                   f'\tOops: {display_name.capitalize()} lot amount must be '
                   f'> {min_amount}')
             continue
         elif amount > data_left:
-            print(Fore.RED + f'\tOops: You only have {data_left} left')
+            xprint(Fore.RED, f'\tOops: You only have {data_left} left')
             continue
 
         if len(lot_data) == 1:
@@ -39,21 +65,21 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
         else:
             price = lot_data[1]
             if price < math.ceil(amount * price_multiplier):
-                print(Fore.RED +
+                xprint(Fore.RED,
                       f'\tOops: {display_name.capitalize()} lot price must be >='
                       f' ({price_multiplier} * amount)')
                 continue
             elif price > max_multiplier * amount:
-                print(Fore.RED +
+                xprint(Fore.RED,
                       f'\tOops: {display_name.capitalize()} lot price must be <='
                       f' ({max_multiplier} * amount)')
                 continue
 
-        print(Fore.GREEN +
+        xprint(Fore.GREEN,
               f'\t\tOk! Lot {index}: {amount} {display_name[:3]}.'
               f' for {price} rub.')
         data_left -= amount
-        print(f'\t\t({data_left} {display_name[:3]}. left)')
+        xprint('', f'\t\t({data_left} {display_name[:3]}. left)')
         lots_to_sell.append({
             'name': display_name[:3],
             'lot_type': lot_type,
@@ -92,11 +118,11 @@ async def prepare_lots(rests):
 def print_prepared_lots(prepared_lots):
     count = len(prepared_lots)
     if count:
-        print(Fore.LIGHTMAGENTA_EX +
+        xprint(Fore.LIGHTMAGENTA_EX,
               f'Ok. You have prepared {count} lot{"s" if count > 1 else ""}:')
         for lot in prepared_lots:
             color = Fore.YELLOW if lot['lot_type'] == 'voice' else Fore.GREEN
-            print(color + f'\t{lot["amount"]} {lot["name"]} '
+            xprint(color, f'\t{lot["amount"]} {lot["name"]} '
                           f'for {lot["price"]} rub')
 
 
@@ -122,10 +148,10 @@ def print_lot_listing_status(response):
         amount = response['data']['volume']['value']
         uom = response['data']['volume']['uom']
         cost = response['data']['cost']['amount']
-        print(color +
+        xprint(color,
               f'Successful listing {amount} {uom} for {cost} rub.')
     else:
-        print(Fore.RED +
+        xprint(Fore.RED,
               f'Error during listing... Trying Again')
 
 

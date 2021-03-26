@@ -2,10 +2,14 @@ from colorama import Fore
 
 from app.api import Tele2Api
 
+from log import xprint
+
+
 
 async def print_balance(api):
     balance = await api.get_balance()
-    print(Fore.YELLOW + 'Balance: ' + Fore.MAGENTA + f'{balance} rub.')
+    xprint(Fore.YELLOW,  'Balance: ')
+    xprint(Fore.MAGENTA, f'{balance} rub.', True)
 
 
 async def print_rests(api: Tele2Api):
@@ -14,8 +18,8 @@ async def print_rests(api: Tele2Api):
         Fore.CYAN + 'note: only plan (not market-bought ones nor transferred)'
                     ' rests can be sold')
     rests = await api.get_rests()
-    print(Fore.WHITE + 'You have')
-    print(Fore.YELLOW + f'\t{rests["voice"]} min')
-    print(Fore.GREEN + f'\t{rests["data"]} gb')
-    print(Fore.WHITE + '\t\tavailable to sell.')
+    xprint(Fore.WHITE,  'You have')
+    xprint(Fore.YELLOW, f'\t{rests["voice"]} min')
+    xprint(Fore.GREEN, f'\t{rests["data"]} gb')
+    xprint(Fore.WHITE, '\t\tavailable to sell.')
     return rests
