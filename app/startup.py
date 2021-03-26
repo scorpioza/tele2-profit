@@ -49,10 +49,10 @@ async def get_active_lots(api: Tele2Api, func="print"):
     return active_lots
 
 async def delete_active_lots(api: Tele2Api):
-    return get_active_lots(api, "delete")
+    return await get_active_lots(api, "delete")
 
 async def update_active_lots(api: Tele2Api):
-    return get_active_lots(api, "update")
+    return await get_active_lots(api, "update")
 
 async def print_active_lots(api: Tele2Api):
-    return get_active_lots(api)
+    return await get_active_lots(api)
