@@ -17,7 +17,8 @@ async def login_pipeline(phone_number: str):
         access_token, refresh_token = await get_tokens(api, phone_number)
         xprint(Fore.GREEN, 'Successful auth!')
         write_config_to_file(phone_number, access_token, refresh_token)
-        xprint(Fore.YELLOW, 'Auth data saved to ' + Fore.BLUE + 'config.json')
+        xprint(Fore.YELLOW, 'Auth data saved to ')
+        xprint(Fore.BLUE, CONFIG_PATH)
         return access_token, refresh_token
 
 

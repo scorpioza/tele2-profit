@@ -3,6 +3,7 @@ import re
 from colorama import Fore
 
 from app.api import Tele2Api
+from config import *
 
 
 def input_phone_number():
@@ -31,7 +32,7 @@ async def get_tokens(api: Tele2Api, phone_number: str):
 
 def write_config_to_file(phone_number: str, access_token: str,
                          refresh_token: str):
-    with open('config.json', 'w') as f:
+    with open(CONFIG_PATH, 'w') as f:
         json.dump({
             'x-p': phone_number,
             'x-at': access_token,

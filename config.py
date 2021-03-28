@@ -11,6 +11,9 @@ PRINT_TO_LOG = True
 # относительный или абсолютный
 LOG_PATH = "tele.log"
 
+# путь к конфигу
+CONFIG_PATH="tele2-profit/config.json"
+
 # названия смайлов из api tele2
 SMILES = ["bomb", "cat", "cool", "devil", "rich", "scream", "tongue", "zipped"]
 

@@ -4,11 +4,11 @@ import json
 from colorama import Fore
 
 from app.api import Tele2Api
-
+from config import *
 
 def try_load_config():
     try:
-        with open('config.json', 'r') as f:
+        with open(CONFIG_PATH, 'r') as f:
             obj = json.load(f)
             phone_number = obj['x-p']
             access_token = obj['x-at']
