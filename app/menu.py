@@ -18,7 +18,7 @@ async def display_menu(display_again_action: bool):
 
 async def menu_new_action(api):
     rests = await print_rests(api)
-    prepared_lots = await prepare_lots(rests)
+    prepared_lots = await prepare_lots(rests, api.phone_number)
     xprint(Fore.MAGENTA, '-----')
     if len(prepared_lots):
         print_prepared_lots(prepared_lots)

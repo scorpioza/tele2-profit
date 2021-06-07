@@ -6,11 +6,11 @@ from colorama import Fore
 from app.api import Tele2Api
 from config import *
 
-def try_load_config():
+def try_load_config(phone_number):
     try:
-        with open(CONFIG_PATH, 'r') as f:
+        with open(CONFIG_PATH.format(phone_number=phone_number), 'r') as f:
             obj = json.load(f)
-            phone_number = obj['x-p']
+            #phone_number = obj['x-p']
             access_token = obj['x-at']
             refresh_token = obj['x-rt']
         return phone_number, access_token, refresh_token

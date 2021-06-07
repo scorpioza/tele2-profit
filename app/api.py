@@ -35,6 +35,8 @@ class Tele2Api:
         self.auth_post_url = TOKEN_API
         self.access_token = access_token
         self.refresh_token = refresh_token
+        self.phone_number = phone_number
+
 
     async def __aenter__(self):
         self.session = ClientSession(headers={
