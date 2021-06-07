@@ -8,14 +8,53 @@ from app.api import Tele2Api
 
 
 def input_lots(data_left, display_name, min_amount, max_multiplier,
-               price_multiplier, lot_type):
+               price_multiplier, lot_type, phone_number):
     lots_to_sell = []
     index = 1
     while data_left >= min_amount:
         user_input = input(Fore.WHITE + f'\t{display_name}s lot {index} >>> ')
 
+<<<<<<< Updated upstream
         if user_input == '':
             break
+=======
+        smiles = []
+        wait = 0
+        position = 0
+        # xekima: add auto mode
+        if AUTO_MODE:
+            cfg = CFG[phone_number]["gb"] if lot_type == 'data' else CFG[phone_number]["min"]
+            if len(cfg) <= cfg_index:
+                break
+
+            lot_data=list()
+            lot_data.append(int(cfg[cfg_index]["lot"]))
+            if "price" in cfg[cfg_index]:
+                lot_data.append(int(cfg[cfg_index]["price"]))
+                
+            if "smiles" in cfg[cfg_index]:
+                smiles = cfg[cfg_index]["smiles"]
+
+            if "wait" in cfg[cfg_index]:
+                wait = int(cfg[cfg_index]["wait"])
+            
+            if "position" in cfg[cfg_index]:
+                position = int(cfg[cfg_index]["position"])
+
+            cfg_index+=1
+
+            lot_str = " ".join(str(x) for x in lot_data)
+            if not re.match(r'^\s*\d+\s*(\s\d+\s*)?$', lot_str):
+                xprint(Fore.MAGENTA, '\tIncorrect input format: '+lot_str+'. Skipping...')
+                continue
+
+        else:
+
+            user_input = input(Fore.WHITE + f'\t{display_name}s lot {index} >>> ')
+
+            if user_input == '':
+                break
+>>>>>>> Stashed changes
 
         if not re.match(r'^\s*\d+\s*(\s\d+\s*)?$', user_input):
             print(Fore.MAGENTA + '\tIncorrect input format. Try again')
@@ -59,13 +98,19 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
             'lot_type': lot_type,
             'amount': amount,
             'price': price,
+<<<<<<< Updated upstream
+=======
+            'smiles': smiles,
+            'position': position,
+            'wait': wait
+>>>>>>> Stashed changes
         })
 
         index += 1
     return lots_to_sell
 
 
-async def prepare_lots(rests):
+async def prepare_lots(rests,phone_number):
     lots_to_sell = []
 
     if rests['voice'] >= 50:
@@ -75,7 +120,8 @@ async def prepare_lots(rests):
                                    min_amount=50,
                                    max_multiplier=2,
                                    price_multiplier=0.8,
-                                   lot_type='voice'
+                                   lot_type='voice',
+                                   phone_number=phone_number
                                    )
     if rests['data'] >= 1:
         print(Fore.GREEN + '2. Prepare gigabyte lots:')
@@ -84,7 +130,8 @@ async def prepare_lots(rests):
                                    min_amount=1,
                                    max_multiplier=50,
                                    price_multiplier=15,
-                                   lot_type='data'
+                                   lot_type='data',
+                                   phone_number=phone_number
                                    )
     return lots_to_sell
 
@@ -135,6 +182,28 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
         status_is_ok = get_if_status_is_ok(response)
         print_lot_listing_status(response)
         if status_is_ok:
+<<<<<<< Updated upstream
+=======
+            '''
+            {'meta': {'status': 'OK', 'message': None}, 
+            'data': {'id': '-5519094492788093579', 
+            'seller': {'name': '', 'emojis': []}, 
+            'trafficType': 'voice', 
+            'volume': {'value': 50, 'uom': 'min'}, 
+            'cost': {'amount': 40.0, 'currency': 'rub'}, 
+            'commission': {'amount': 0.0, 'currency': 'rub'}, 
+            'status': 'active', 
+            'creationDate': '2021-03-26T22:47:23.226+03:00', 
+            'expirationDate': '2021-04-22T00:00:00+03:00', 
+            'statusChangeDate': '2021-03-26T22:47:23.226+03:00', 
+            'my': True, 
+            'hash': '6078503369446081043'}}
+            '''
+            smiles = await api.apply_emojes(response['data']['id'], lot['price'], lot['smiles'])
+            xprint(Fore.YELLOW, "Smiles added: "+"(" + ", ".join(smiles) + ")")
+            if lot['position'] or lot['wait']:
+                await try_resell(api, lot,response)
+>>>>>>> Stashed changes
             break
         else:
             time.sleep(3)
@@ -144,3 +213,12 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
 async def sell_prepared_lots(api: Tele2Api, lots: list):
     for lot in lots:
         await try_sell_infinite_times(api, lot)
+
+
+async def try_resell(api, lot, response):
+    if lot['wait']:
+        time.sleep(lot['wait'])
+    
+    active_lots = await api.get_active_lots()
+
+    #response['creationDate']

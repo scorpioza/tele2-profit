@@ -31,7 +31,11 @@ async def get_tokens(api: Tele2Api, phone_number: str):
 
 def write_config_to_file(phone_number: str, access_token: str,
                          refresh_token: str):
+<<<<<<< Updated upstream
     with open('config.json', 'w') as f:
+=======
+    with open(CONFIG_PATH.format(phone_number=phone_number), 'w') as f:
+>>>>>>> Stashed changes
         json.dump({
             'x-p': phone_number,
             'x-at': access_token,

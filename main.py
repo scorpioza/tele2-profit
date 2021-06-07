@@ -14,7 +14,12 @@ async def login_pipeline(phone_number: str):
         access_token, refresh_token = await get_tokens(api, phone_number)
         print(Fore.GREEN + 'Successful auth!')
         write_config_to_file(phone_number, access_token, refresh_token)
+<<<<<<< Updated upstream
         print(Fore.YELLOW + 'Auth data saved to ' + Fore.BLUE + 'config.json')
+=======
+        xprint(Fore.YELLOW, 'Auth data saved to ')
+        xprint(Fore.BLUE, CONFIG_PATH.format(phone_number=phone_number))
+>>>>>>> Stashed changes
         return access_token, refresh_token
 
 
@@ -64,8 +69,10 @@ async def main_pipeline(phone_number: str, access_token: str,
 async def main():
     colorama_init(True)
 
-    config = try_load_config()
+    for phone_number, phone_data in CFG.items():
+        config = try_load_config(phone_number)
 
+<<<<<<< Updated upstream
     if not config:
         phone_number = input_phone_number()
         access_token, refresh_token = await login_pipeline(phone_number)
@@ -76,6 +83,21 @@ async def main():
                                                      refresh_token)
     await main_pipeline(phone_number, access_token, refresh_token)
 
+=======
+        if not config:
+            #phone_number = input_phone_number()
+            access_token, refresh_token = await login_pipeline(phone_number)
+        else:
+            phone_number, access_token, refresh_token = config
+
+        access_token, refresh_token = await authenticate(phone_number, access_token,
+                                                         refresh_token)
+        #xekima: mode switcher
+        if AUTO_MODE:
+            await main_auto_mode(phone_number, access_token, refresh_token)
+        else:
+            await main_pipeline(phone_number, access_token, refresh_token)
+>>>>>>> Stashed changes
 
 if __name__ == '__main__':
     run_main(main)
