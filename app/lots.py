@@ -14,10 +14,9 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
     while data_left >= min_amount:
         user_input = input(Fore.WHITE + f'\t{display_name}s lot {index} >>> ')
 
-<<<<<<< Updated upstream
         if user_input == '':
             break
-=======
+
         smiles = []
         wait = 0
         position = 0
@@ -54,7 +53,6 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
 
             if user_input == '':
                 break
->>>>>>> Stashed changes
 
         if not re.match(r'^\s*\d+\s*(\s\d+\s*)?$', user_input):
             print(Fore.MAGENTA + '\tIncorrect input format. Try again')
@@ -98,12 +96,9 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
             'lot_type': lot_type,
             'amount': amount,
             'price': price,
-<<<<<<< Updated upstream
-=======
             'smiles': smiles,
             'position': position,
             'wait': wait
->>>>>>> Stashed changes
         })
 
         index += 1
@@ -182,8 +177,6 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
         status_is_ok = get_if_status_is_ok(response)
         print_lot_listing_status(response)
         if status_is_ok:
-<<<<<<< Updated upstream
-=======
             '''
             {'meta': {'status': 'OK', 'message': None}, 
             'data': {'id': '-5519094492788093579', 
@@ -203,7 +196,6 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
             xprint(Fore.YELLOW, "Smiles added: "+"(" + ", ".join(smiles) + ")")
             if lot['position'] or lot['wait']:
                 await try_resell(api, lot,response)
->>>>>>> Stashed changes
             break
         else:
             time.sleep(3)

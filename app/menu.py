@@ -15,23 +15,15 @@ async def display_menu(display_again_action: bool):
 
 async def menu_new_action(api):
     rests = await print_rests(api)
-<<<<<<< Updated upstream
-    prepared_lots = await prepare_lots(rests)
-    print(Fore.MAGENTA + '-----')
-=======
     prepared_lots = await prepare_lots(rests, api.phone_number)
     xprint(Fore.MAGENTA, '-----')
->>>>>>> Stashed changes
     if len(prepared_lots):
         print_prepared_lots(prepared_lots)
         if console.confirm('Sell prepared lots?', default=True):
             await sell_prepared_lots(api, prepared_lots)
-<<<<<<< Updated upstream
-=======
         else:
             if console.confirm('Sell prepared lots?', default=True):
                 await sell_prepared_lots(api, prepared_lots)
->>>>>>> Stashed changes
     else:
         print(Fore.YELLOW + 'You did not prepared any lots.')
 
