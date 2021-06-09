@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 import math
 import re
 import time
@@ -8,6 +9,9 @@ from app.api import Tele2Api
 
 from config import *
 from log import xprint
+
+import asyncio
+
 
 
 #xekima: modified
@@ -101,7 +105,7 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
             'lot_type': lot_type,
             'amount': amount,
             'price': price,
-            'smiles': smiles
+            'smiles': smiles,
             'position': position,
             'wait': wait
         })
@@ -180,6 +184,7 @@ def print_lot_listing_status(response):
 
 
 async def try_sell_infinite_times(api: Tele2Api, lot: any):
+    taskPlus = NULL
     while True:
         response = await api.sell_lot(lot)
         status_is_ok = get_if_status_is_ok(response)
@@ -202,22 +207,45 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
             '''
             smiles = await api.apply_emojes(response['data']['id'], lot['price'], lot['smiles'])
             xprint(Fore.YELLOW, "Smiles added: "+"(" + ", ".join(smiles) + ")")
-            if lot['position'] or lot['wait']:
-                await try_resell(api, lot, response)
-
+            if 'position' in lot or 'wait' in lot:
+                #await try_resell(api, lot, response)
+                loop = asyncio.get_event_loop()
+                taskPlus = loop.create_task(try_resell(api, lot, response))
             break
         else:
             time.sleep(3)
             continue
 
+    return taskPlus
+
 
 async def sell_prepared_lots(api: Tele2Api, lots: list):
+    tasks = []
     for lot in lots:
-        await try_sell_infinite_times(api, lot)
+        taskPlus = await try_sell_infinite_times(api, lot)
+        if taskPlus != NULL:
+            tasks.append(taskPlus)
+
+    for task in tasks:
+        await task
 
 
-async def try_resell(api, lot, response):
-    if lot['wait']:
+async def try_resell(api: Tele2Api, lot, response):
+    if 'wait' in lot:
         time.sleep(lot['wait'])
     
     active_lots = await api.get_active_lots()
+    pos = 0
+    for lot in active_lots:
+        pos+=1
+        if lot["id"]==response['data']['id']:
+            if 'position' not in lot or pos >= lot['position'] :
+                api.change_price(response['data']['id'], lot['price']+1)
+            else:
+                while True:
+                    time.sleep(1)
+                    if pos >= lot['position']:
+                        api.change_price(response['data']['id'], lot['price']+1)
+                        break
+            break
+

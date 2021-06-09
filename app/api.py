@@ -107,6 +107,11 @@ class Tele2Api:
         })
         return smiles
 
+    async def change_price(self, lot_id, lot_price):
+        return await self.session.patch(f'{self.market_api}/{lot_id}', json={
+            "cost": {"amount": lot_price, "currency": "rub"}
+        })
+
     async def return_lot(self, lot_id):
         response = await self.session.delete(f'{self.market_api}/{lot_id}')
         return await _try_parse_to_json(response)
