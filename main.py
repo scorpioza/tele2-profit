@@ -81,6 +81,8 @@ async def main():
     colorama_init(True)
 
     for phone_number, phone_data in CFG.items():
+        xprint(Fore.MAGENTA, '# PHONE: '+phone_number+" #")
+
         config = try_load_config(phone_number)
 
         if not config:

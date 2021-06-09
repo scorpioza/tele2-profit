@@ -210,7 +210,7 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
             if 'position' in lot or 'wait' in lot:
                 #await try_resell(api, lot, response)
                 loop = asyncio.get_event_loop()
-                taskPlus = loop.create_task(try_resell(api, lot, response))
+                taskPlus = loop.create_task(try_resell(api, lot, response, True))
             break
         else:
             time.sleep(3)
@@ -226,26 +226,29 @@ async def sell_prepared_lots(api: Tele2Api, lots: list):
         if taskPlus != NULL:
             tasks.append(taskPlus)
 
-    for task in tasks:
-        await task
+    await asyncio.gather(*tasks)
+    #for task in tasks:
+    #    await task
 
 
-async def try_resell(api: Tele2Api, lot, response):
-    if 'wait' in lot:
-        time.sleep(lot['wait'])
+async def try_resell(api: Tele2Api, curlot, response, wait):
+    if wait and 'wait' in curlot:
+        time.sleep(curlot['wait'])
     
+    amount = response['data']['volume']['value']
+    uom = response['data']['volume']['uom']
+
     active_lots = await api.get_active_lots()
     pos = 0
     for lot in active_lots:
         pos+=1
         if lot["id"]==response['data']['id']:
-            if 'position' not in lot or pos >= lot['position'] :
+            if 'position' not in curlot or pos >= curlot['position'] :
                 api.change_price(response['data']['id'], lot['price']+1)
+                xprint(Fore.YELLOW, "Set price "+(curlot['price']+1)+" for lot "+amount+" ("+uom+")")
+
             else:
-                while True:
-                    time.sleep(1)
-                    if pos >= lot['position']:
-                        api.change_price(response['data']['id'], lot['price']+1)
-                        break
+                time.sleep(WAIT_FOR_NEXT_CHECK_LOT_POS)
+                try_resell(api, curlot, response, False)
             break
 
