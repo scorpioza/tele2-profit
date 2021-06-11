@@ -16,7 +16,7 @@ async def display_menu(display_again_action: bool):
     return console.list_input('Action', choices=choices)
 
 
-async def menu_new_action(api):
+async def menu_new_action(api, resell_tasks=list()):
     rests = await print_rests(api)
     prepared_lots = await prepare_lots(rests, api.phone_number)
     xprint(Fore.MAGENTA, '-----')
@@ -25,7 +25,8 @@ async def menu_new_action(api):
 
         # xekima
         if AUTO_MODE:
-            await sell_prepared_lots(api, prepared_lots)
+            await sell_prepared_lots(api, prepared_lots, resell_tasks)
+            pass
         else:
             if console.confirm('Sell prepared lots?', default=True):
                 await sell_prepared_lots(api, prepared_lots)

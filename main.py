@@ -11,6 +11,7 @@ from app.timer import activate_timer_if_needed
 from config import *
 from log import xprint
 
+import asyncio
 
 async def login_pipeline(phone_number: str):
     async with Tele2Api(phone_number) as api:
@@ -71,14 +72,15 @@ async def main_pipeline(phone_number: str, access_token: str,
 
 # xekima - add auto mode 
 async def main_auto_mode(phone_number: str, access_token: str,
-                        refresh_token: str):
+                        refresh_token: str, resell_tasks: list):
     async with Tele2Api(phone_number, access_token, refresh_token) as api:
         await print_balance(api)
-        await menu_new_action(api)
+        await menu_new_action(api, resell_tasks)
 
 
 async def main():
     colorama_init(True)
+    resell_tasks = []
 
     for phone_number, phone_data in CFG.items():
         xprint(Fore.MAGENTA, '# PHONE: '+phone_number+" #")
@@ -95,9 +97,11 @@ async def main():
                                                         refresh_token)
         #xekima: mode switcher
         if AUTO_MODE:                                                 
-            await main_auto_mode(phone_number, access_token, refresh_token)
+            await main_auto_mode(phone_number, access_token, refresh_token, resell_tasks)
         else: 
             await main_pipeline(phone_number, access_token, refresh_token)
+
+    await asyncio.gather(*resell_tasks)
 
 if __name__ == '__main__':
     run_main(main)

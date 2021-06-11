@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import math
 import re
 import time
@@ -6,6 +5,7 @@ import time
 from colorama import Fore
 
 from app.api import Tele2Api
+from app.resell import try_resell
 
 from config import *
 from log import xprint
@@ -28,25 +28,26 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
 
         # xekima: add auto mode
         if AUTO_MODE:
-            cfg = CFG[phone_number]["gb"] if lot_type == 'data' else CFG[phone_number]["min"]
-
-            if len(cfg) <= cfg_index:
+            cfg = CFG_DEFAULT.copy()
+            cc = CFG[phone_number]["gb"] if lot_type == 'data' else CFG[phone_number]["min"]
+            if len(cc) <= cfg_index:
                 break
+            cfg.update(cc[cfg_index])
 
             lot_data=list()
-            lot_data.append(int(cfg[cfg_index]["lot"]))
-            if "price" in cfg[cfg_index]:
-                lot_data.append(int(cfg[cfg_index]["price"]))
+            lot_data.append(int(cfg["lot"]))
+            if "price" in cfg:
+                lot_data.append(int(cfg["price"]))
                 
-            if "smiles" in cfg[cfg_index]:
-                smiles = cfg[cfg_index]["smiles"]
+            if "smiles" in cfg:
+                smiles = cfg["smiles"]
 
 
-            if "wait" in cfg[cfg_index]:
-                wait = int(cfg[cfg_index]["wait"])
+            if "wait" in cfg:
+                wait = int(cfg["wait"])
             
-            if "position" in cfg[cfg_index]:
-                position = int(cfg[cfg_index]["position"])
+            if "position" in cfg:
+                position = int(cfg["position"])
 
 
             cfg_index+=1
@@ -184,7 +185,7 @@ def print_lot_listing_status(response):
 
 
 async def try_sell_infinite_times(api: Tele2Api, lot: any):
-    taskPlus = NULL
+    taskPlus = None
     while True:
         response = await api.sell_lot(lot)
         status_is_ok = get_if_status_is_ok(response)
@@ -207,7 +208,7 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
             '''
             smiles = await api.apply_emojes(response['data']['id'], lot['price'], lot['smiles'])
             xprint(Fore.YELLOW, "Smiles added: "+"(" + ", ".join(smiles) + ")")
-            if 'position' in lot or 'wait' in lot:
+            if ('position' in lot and lot['position']) or ('wait' in lot and lot['wait']):
                 #await try_resell(api, lot, response)
                 loop = asyncio.get_event_loop()
                 taskPlus = loop.create_task(try_resell(api, lot, response, True))
@@ -219,36 +220,12 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
     return taskPlus
 
 
-async def sell_prepared_lots(api: Tele2Api, lots: list):
-    tasks = []
+async def sell_prepared_lots(api: Tele2Api, lots: list, resell_tasks=list()):
     for lot in lots:
         taskPlus = await try_sell_infinite_times(api, lot)
-        if taskPlus != NULL:
-            tasks.append(taskPlus)
-
-    await asyncio.gather(*tasks)
-    #for task in tasks:
-    #    await task
+        if taskPlus != None:
+            resell_tasks.append(taskPlus)
 
 
-async def try_resell(api: Tele2Api, curlot, response, wait):
-    if wait and 'wait' in curlot:
-        time.sleep(curlot['wait'])
-    
-    amount = response['data']['volume']['value']
-    uom = response['data']['volume']['uom']
 
-    active_lots = await api.get_active_lots()
-    pos = 0
-    for lot in active_lots:
-        pos+=1
-        if lot["id"]==response['data']['id']:
-            if 'position' not in curlot or pos >= curlot['position'] :
-                api.change_price(response['data']['id'], lot['price']+1)
-                xprint(Fore.YELLOW, "Set price "+(curlot['price']+1)+" for lot "+amount+" ("+uom+")")
-
-            else:
-                time.sleep(WAIT_FOR_NEXT_CHECK_LOT_POS)
-                try_resell(api, curlot, response, False)
-            break
 
