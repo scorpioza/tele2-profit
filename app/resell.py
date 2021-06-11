@@ -133,12 +133,15 @@ async def try_resell(api2: Tele2Api, curlot, response, wait):
 
     if wait and 'wait' in curlot and curlot['wait']:
         time.sleep(curlot['wait'])
-        xprint(Fore.YELLOW, "WAITING-SLEEPING for change price "+str(new_price)+" for lot "+amount+" ("+uom+")")
 
     async with Tele2Api(api2.phone_number, api2.access_token, api2.refresh_token) as api:
 
         if 'position' in curlot and curlot['position']:
             lots_in_list = getData(response, curlot['position'])
+            #print("======= LOTS IN LIST ============")
+            #print(lots_in_list)
+            #print("======= /LOTS IN LIST ============")
+
             wait_next=False
             if lots_in_list:
                 for lot in lots_in_list:
@@ -149,12 +152,12 @@ async def try_resell(api2: Tele2Api, curlot, response, wait):
                 wait_next=True
 
             if not wait_next:
-                api.change_price(response['data']['id'], curlot['price']+1)
+                await api.change_price(response['data']['id'], curlot['price']+1)
                 xprint(Fore.YELLOW, "Set price "+str(new_price)+" for lot "+amount+" ("+uom+")")
             else:
                 time.sleep(WAIT_FOR_NEXT_CHECK_LOT_POS)
                 xprint(Fore.YELLOW, "WAITING for change price "+str(new_price)+" for lot "+amount+" ("+uom+")")
                 await try_resell(api, curlot, response, False)
         else:
-            api.change_price(response['data']['id'], curlot['price']+1)
+            await api.change_price(response['data']['id'], curlot['price']+1)
             xprint(Fore.YELLOW, "Set price "+str(new_price)+" for lot "+amount+" ("+uom+")")
