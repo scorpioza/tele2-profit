@@ -121,10 +121,13 @@ def getData(response, limit):
     return info["data"]
 
 
-async def try_resell(api2: Tele2Api, curlot, response, wait):
+async def try_resell(params):
 
     # 'volume': {'value': 50, 'uom': 'min'}, 
     # 'cost': {'amount': 40.0, 'currency': 'rub'}, 
+    curlot = params['lot']
+    response = params["response"]
+    wait= params["wait"]
 
     amount = str(response['data']['volume']['value'])
     uom = str(response['data']['volume']['uom'])
@@ -134,7 +137,7 @@ async def try_resell(api2: Tele2Api, curlot, response, wait):
     if wait and 'wait' in curlot and curlot['wait']:
         time.sleep(curlot['wait'])
 
-    async with Tele2Api(api2.phone_number, api2.access_token, api2.refresh_token) as api:
+    async with Tele2Api(params['phone_number'], params['access_token'], params['refresh_token']) as api:
 
         if 'position' in curlot and curlot['position']:
             lots_in_list = getData(response, curlot['position'])
@@ -157,7 +160,9 @@ async def try_resell(api2: Tele2Api, curlot, response, wait):
             else:
                 time.sleep(WAIT_FOR_NEXT_CHECK_LOT_POS)
                 xprint(Fore.YELLOW, "WAITING for change price "+str(new_price)+" for lot "+amount+" ("+uom+")")
-                await try_resell(api, curlot, response, False)
+                
+                params['wait']=False
+                await try_resell(params)
         else:
             await api.change_price(response['data']['id'], curlot['price']+1)
             xprint(Fore.YELLOW, "Set price "+str(new_price)+" for lot "+amount+" ("+uom+")")

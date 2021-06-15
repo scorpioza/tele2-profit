@@ -11,6 +11,7 @@ from app.timer import activate_timer_if_needed
 from config import *
 from log import xprint
 
+from app.resell import try_resell
 import asyncio
 
 async def login_pipeline(phone_number: str):
@@ -101,7 +102,13 @@ async def main():
         else: 
             await main_pipeline(phone_number, access_token, refresh_token)
 
-    await asyncio.gather(*resell_tasks)
+    if resell_tasks:
+        tsks=[]
+        for rt in resell_tasks:
+            loop = asyncio.get_event_loop()
+            taskPlus = loop.create_task( try_resell(rt))
+            tsks.append(taskPlus)
+        await asyncio.gather(*tsks)
 
 if __name__ == '__main__':
     run_main(main)

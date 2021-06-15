@@ -5,12 +5,9 @@ import time
 from colorama import Fore
 
 from app.api import Tele2Api
-from app.resell import try_resell
-
 from config import *
 from log import xprint
 
-import asyncio
 
 
 
@@ -184,7 +181,7 @@ def print_lot_listing_status(response):
               f'Error during listing... Trying Again')
 
 
-async def try_sell_infinite_times(api: Tele2Api, lot: any):
+async def try_sell_infinite_times(api: Tele2Api, lot: any, resell_tasks=list()):
     taskPlus = None
     while True:
         response = await api.sell_lot(lot)
@@ -210,8 +207,14 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
             xprint(Fore.YELLOW, "Smiles added: "+"(" + ", ".join(smiles) + ")")
             if ('position' in lot and lot['position']) or ('wait' in lot and lot['wait']):
                 #await try_resell(api, lot, response)
-                loop = asyncio.get_event_loop()
-                taskPlus = loop.create_task(try_resell(api, lot, response, True))
+                resell_tasks.append({
+                    "phone_number": api.phone_number, 
+                    "access_token" : api.access_token, 
+                    "refresh_token" : api.refresh_token,
+                    "lot": lot,
+                    "response" : response,
+                    "wait": True
+                })
             break
         else:
             time.sleep(3)
@@ -222,9 +225,7 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any):
 
 async def sell_prepared_lots(api: Tele2Api, lots: list, resell_tasks=list()):
     for lot in lots:
-        taskPlus = await try_sell_infinite_times(api, lot)
-        if taskPlus != None:
-            resell_tasks.append(taskPlus)
+        await try_sell_infinite_times(api, lot, resell_tasks)
 
 
 
