@@ -8,6 +8,7 @@ import random
 import requests
 import json
 
+import asyncio
 
 
 REQUEST_HEADERS = {'User-agent':
@@ -135,7 +136,8 @@ async def try_resell(params):
     new_price = int(curlot['price'])+1
 
     if wait and 'wait' in curlot and curlot['wait']:
-        time.sleep(curlot['wait'])
+        await asyncio.sleep(curlot['wait'])
+        xprint(Fore.YELLOW, "Begin reselling for "+params['phone_number']+"; "+str(price)+" for lot "+amount+" ("+uom+")", True)
 
     async with Tele2Api(params['phone_number'], params['access_token'], params['refresh_token']) as api:
 
@@ -156,13 +158,13 @@ async def try_resell(params):
 
             if not wait_next:
                 await api.change_price(response['data']['id'], curlot['price']+1)
-                xprint(Fore.YELLOW, "Set price "+str(new_price)+" for lot "+amount+" ("+uom+")")
+                xprint(Fore.YELLOW, "Set price "+str(new_price)+" for lot "+amount+" ("+uom+")", True)
             else:
-                time.sleep(WAIT_FOR_NEXT_CHECK_LOT_POS)
-                xprint(Fore.YELLOW, "WAITING for change price "+str(new_price)+" for lot "+amount+" ("+uom+")")
+                await asyncio.sleep(WAIT_FOR_NEXT_CHECK_LOT_POS)
+                xprint(Fore.YELLOW, "WAITING for change price "+str(new_price)+" for lot "+amount+" ("+uom+")", True)
                 
                 params['wait']=False
                 await try_resell(params)
         else:
             await api.change_price(response['data']['id'], curlot['price']+1)
-            xprint(Fore.YELLOW, "Set price "+str(new_price)+" for lot "+amount+" ("+uom+")")
+            xprint(Fore.YELLOW, "Set price "+str(new_price)+" for lot "+amount+" ("+uom+")", True)

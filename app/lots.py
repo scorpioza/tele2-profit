@@ -26,7 +26,14 @@ def input_lots(data_left, display_name, min_amount, max_multiplier,
         # xekima: add auto mode
         if AUTO_MODE:
             cfg = CFG_DEFAULT.copy()
-            cc = CFG[phone_number]["gb"] if lot_type == 'data' else CFG[phone_number]["min"]
+            cc = None
+            if lot_type == 'data' and "gb" in CFG[phone_number]:
+                cc = CFG[phone_number]["gb"]
+            elif lot_type != 'data' and "min" in CFG[phone_number]:
+                cc = CFG[phone_number]["min"]
+            else:
+                break
+
             if len(cc) <= cfg_index:
                 break
             cfg.update(cc[cfg_index])
@@ -205,7 +212,7 @@ async def try_sell_infinite_times(api: Tele2Api, lot: any, resell_tasks=list()):
             '''
             smiles = await api.apply_emojes(response['data']['id'], lot['price'], lot['smiles'])
             xprint(Fore.YELLOW, "Smiles added: "+"(" + ", ".join(smiles) + ")")
-            if ('position' in lot and lot['position']) or ('wait' in lot and lot['wait']):
+            if response['data']['volume']['uom'] == "gb" and ( ('position' in lot and lot['position']) or ('wait' in lot and lot['wait'])):
                 #await try_resell(api, lot, response)
                 resell_tasks.append({
                     "phone_number": api.phone_number, 

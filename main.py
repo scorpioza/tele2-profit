@@ -84,7 +84,7 @@ async def main():
     resell_tasks = []
 
     for phone_number, phone_data in CFG.items():
-        xprint(Fore.MAGENTA, '# PHONE: '+phone_number+" #")
+        xprint(Fore.MAGENTA, '# PHONE: '+phone_number+" #", True)
 
         config = try_load_config(phone_number)
 
@@ -102,13 +102,22 @@ async def main():
         else: 
             await main_pipeline(phone_number, access_token, refresh_token)
 
+    xprint(Fore.MAGENTA, '# Gathering resell tasks: #', True)
     if resell_tasks:
         tsks=[]
         for rt in resell_tasks:
-            loop = asyncio.get_event_loop()
-            taskPlus = loop.create_task( try_resell(rt))
+            response = rt['response']['data']
+            amount = str(response['volume']['value'])
+            uom = str(response['volume']['uom'])
+            price = str(response['cost']['amount'])
+            xprint(Fore.YELLOW, 'Set +1: '+rt['phone_number']+'; '+amount+" ("+uom+") - "+price+" rub", True)
+            taskPlus = asyncio.ensure_future(try_resell(rt))
+            #loop = asyncio.get_event_loop()
+            #taskPlus = loop.create_task( try_resell(rt))
             tsks.append(taskPlus)
         await asyncio.gather(*tsks)
+        xprint(Fore.MAGENTA, '# Finish... waiting for unclosed sessions...: #', True)
+        await asyncio.sleep(120)
 
 if __name__ == '__main__':
     run_main(main)
